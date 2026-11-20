@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# agentflow: flujo colaborativo Claude Code + Codex basado en archivos y git.
+# Este mismo script funciona desde el kit (~/Source/agentflow) o desde la copia
+# instalada en cada proyecto (.agentflow/bin/af).
+set -euo pipefail
+
+src="${BASH_SOURCE[0]}"
+while [ -L "$src" ]; do
+  dir="$(cd -P "$(dirname "$src")" && pwd)"
+  src="$(readlink "$src")"
+  [[ $src != /* ]] && src="$dir/$src"
+done
+AF_HOME="$(cd -P "$(dirname "$src")/.." && pwd)"
+export AF_HOME
+
+# shellcheck source=../lib/common.sh
+. "$AF_HOME/lib/common.sh"
+
+cmd="${1:-help}"
+[ $# -gt 0 ] && shift
+
+case "$cmd" in
+  -h|--help|help) af_help ;;
+  -V|--version|version) echo "agentflow $AF_VERSION" ;;
+  *)
+    f="$AF_HOME/lib/cmd-$cmd.sh"
+    [ -f "$f" ] || die "comando desconocido: $cmd (ver: af help)"
+    # shellcheck disable=SC1090
+    . "$f"
+    "cmd_${cmd//-/_}" "$@"
+    ;;
+esac

@@ -1,0 +1,10 @@
+# Permisos de Codex para este repositorio (capa agentflow).
+# Codex solo carga este archivo si el proyecto es "trusted" en ~/.codex/config.toml,
+# y entonces tiene prioridad sobre la configuración de usuario.
+# Abre permisos solo cuando un flujo ya probó que los necesita.
+
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+
+[sandbox_workspace_write]
+network_access = false
