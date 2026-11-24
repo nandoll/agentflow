@@ -1,6 +1,6 @@
 # HANDOFF: {{SLUG}}
 
-Actualízalo al cerrar cada bloque de trabajo y commitéalo junto con el código.
+{{HANDOFF_POLICY}}
 Cualquier agente que retome la tarea empieza leyendo este archivo.
 
 - **Estado:** AF:PENDIENTE (en curso | esperando revisión | esperando al usuario | lista para integrar)

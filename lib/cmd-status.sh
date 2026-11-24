@@ -4,7 +4,7 @@
 cmd_status() {
   af_load_config
   local found=0 w b taskf slug author reviewer branch rounds hand
-  printf '%-28s %-7s %-8s %-30s %-6s %s\n' TAREA AUTOR REVISOR RAMA RONDAS WORKTREE
+  printf '%-28s %-7s %-8s %-40s %-6s %s\n' TAREA AUTOR REVISOR RAMA RONDAS WORKTREE
   while IFS=$'\t' read -r w b; do
     for taskf in "$w/$AF_TASKS_DIR"/*/TASK; do
       [ -f "$taskf" ] || continue
@@ -16,7 +16,7 @@ cmd_status() {
       rounds=0
       [ -f "$(dirname "$taskf")/REVIEW.md" ] && rounds="$(grep -c '^## Ronda ' "$(dirname "$taskf")/REVIEW.md" || true)"
       hand="$(cd "$w" && "$AF_HOME/bin/agentflow" handoff-check "$slug" >/dev/null 2>&1 && echo ok || echo '!handoff')"
-      printf '%-28s %-7s %-8s %-30s %-6s %s %s\n' "$slug" "$author" "$reviewer" "$branch" "$rounds" "$w" "$([ "$hand" = ok ] || echo "$hand")"
+      printf '%-28s %-7s %-8s %-40s %-6s %s %s\n' "$slug" "$author" "$reviewer" "$branch" "$rounds" "$w" "$([ "$hand" = ok ] || echo "$hand")"
       found=1
     done
   done < <(git worktree list --porcelain | awk '/^worktree /{w=substr($0,10)} /^branch /{print w "\t" substr($0,8)}')

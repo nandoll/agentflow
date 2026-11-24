@@ -35,6 +35,7 @@ cmd_review() {
   [ -n "$wt" ] || die "la rama $branch no está desprotegida en ningún worktree"
   cd "$wt"
   tdir="$AF_TASKS_DIR/$slug"
+  base="$(af_task_base_ref "$taskf")"
 
   local ahead; ahead="$(git rev-list --count "$base..HEAD")"
   [ "$ahead" -gt 0 ] || die "la rama $branch no tiene commits sobre $base; no hay nada que revisar"
@@ -42,7 +43,10 @@ cmd_review() {
     warn "hay cambios sin commitear: la revisión solo cubre lo commiteado en $base..HEAD"
   fi
 
-  local review="$tdir/REVIEW.md" round=1 head prompt out
+  local review="$tdir/REVIEW.md" round=1 head prompt out localnote=""
+  [ "$AF_LOCAL" = 1 ] && review="$MAIN_ROOT/$tdir/REVIEW.md"
+  [ "$AF_LOCAL" = 1 ] && localnote="Los archivos de la tarea ($tdir) son locales y no están en git: léelos del disco. No forman parte del diff ni deben mencionarse en commits.
+"
   [ -f "$review" ] && round=$(( $(grep -c '^## Ronda ' "$review" || true) + 1 ))
   if [ "$round" -gt "$AF_REVIEW_MAX_RONDAS" ] && [ "$extra" = 0 ]; then
     die "ya hubo $((round - 1)) rondas (máximo AF_REVIEW_MAX_RONDAS=$AF_REVIEW_MAX_RONDAS). Los P0/P1 pendientes los decide el usuario; si pide otra ronda: af review --ronda-extra"
@@ -59,7 +63,7 @@ Esta es la ronda $round. Lee $tdir/REVIEW.md: tiene las rondas anteriores y la *
   prompt="Eres el REVISOR de la tarea '$slug' (autor: $author). Trabajas en solo lectura: no modifiques archivos.
 Revisa el diff de la rama $branch contra $base ($ahead commits): obténlo con 'git diff $base...HEAD' y 'git log --oneline $base..HEAD', y abre los archivos completos cuando haga falta contexto.
 Lee primero AGENTS.md (reglas del proyecto) y $tdir/PLAN.md (criterios de aceptación).
-Prioriza: errores de corrección, seguridad, casos borde, incumplimientos de AGENTS.md y criterios de aceptación no cumplidos.
+${localnote}Prioriza: errores de corrección, seguridad, casos borde, incumplimientos de AGENTS.md (incluidas sus reglas para mensajes de commit) y criterios de aceptación no cumplidos.
 ${previas}${AF_REVIEW_FOCUS:+Foco específico del proyecto: $AF_REVIEW_FOCUS
 }Formato de salida en Markdown y en español:
 - Un hallazgo por sección '### [P0|P1|P2|P3] título corto', con: archivo:línea, escenario concreto que falla, sugerencia.
@@ -107,6 +111,7 @@ EOF
     printf '\n'
   } >> "$review"
   rm -f "$out" "$out.log"
-  info "hallazgos en $wt/$review (ronda $round)"
+  case "$review" in /*) ;; *) review="$wt/$review" ;; esac
+  info "hallazgos en $review (ronda $round)"
   info "siguiente: el autor ($author) responde cada hallazgo y aplica lo que corresponda"
 }

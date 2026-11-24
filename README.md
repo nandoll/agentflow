@@ -25,6 +25,28 @@ Después completa las secciones `AF:COMPLETAR` de `AGENTS.md` y define `AF_CHECK
 
 La copia en `.agentflow/` se commitea. Así el repo es autosuficiente: las Routines en la nube, la CI o Codex Cloud la encuentran sin depender de tu máquina.
 
+## Modo local (repos de equipo)
+
+Cuando el repositorio es de un equipo y solo deben llegar los cambios, instala con `--local`:
+
+```bash
+~/Source/agentflow/bin/agentflow install /ruta/al/repo --local
+```
+
+- `.agentflow/`, `AGENTS.md`, `CLAUDE.md`, `.claude/settings.local.json` y la carpeta de tareas se excluyen en `.git/info/exclude`, que comparten todos los worktrees. Si alguna de esas rutas ya está versionada, `install` se niega.
+- `af new-task` enlaza esas rutas desde el checkout principal en cada worktree. Las tareas viven en un solo lugar y sobreviven a `af clean`, que solo borra los enlaces.
+- `HANDOFF.md` no se commitea: `af handoff-check` compara su fecha de modificación con la de los archivos que cambió la tarea.
+- Los ajustes de Claude van en `.claude/settings.local.json`, con la atribución de commits y PRs desactivada. No se crea `.codex/config.toml`, porque Codex solo revisa y `af review` lo fuerza a solo lectura.
+
+Opciones útiles en `.agentflow/config` para repos de equipo:
+
+| Variable | Para qué | Ejemplo |
+|---|---|---|
+| `AF_BRANCH_TEMPLATE` / `AF_BRANCH_TYPE` | Ramas con la convención del equipo, sin prefijo de agente | `"{type}/{slug}"` / `feature` |
+| `AF_BASE` / `AF_FETCH_BASE` | Ramificar desde una base remota actualizada | `origin/main` / `1` |
+| `AF_WORKTREE_SETUP` | Preparar cada worktree nuevo | `"pnpm install --frozen-lockfile --prefer-offline"` |
+| `AF_CLEAN_TARGETS` | Ramas donde `af clean` busca la tarea integrada (detecta squash) | `"origin/develop origin/uat"` |
+
 ## Ciclo de una tarea
 
 ```bash
@@ -36,6 +58,12 @@ af clean importar-padron                # después de que integres la rama
 ```
 
 Para trabajo mecánico largo, Codex es el autor y Claude revisa: `af new-task migrar-tests --author codex`.
+
+Con plantilla de ramas: `af new-task SD2-123-login --type fix` crea `fix/SD2-123-login`.
+
+## Pruebas del kit
+
+`tests/smoke.sh` recorre los dos modos en repos temporales con un revisor simulado (no llama a ningún modelo).
 
 ## Garantías
 
